@@ -43,12 +43,13 @@ import (
 )
 
 var (
-	myFqdn      = kingpin.Flag("fqdn", "FQDN to register with").Default(fqdn.Get()).Envar("FQDN").String()
-	proxyURL    = kingpin.Flag("proxy-url", "Push proxy to talk to.").Required().String()
-	caCertFile  = kingpin.Flag("tls.cacert", "<file> CA certificate to verify peer against").String()
-	tlsCert     = kingpin.Flag("tls.cert", "<cert> Client certificate file").String()
-	tlsKey      = kingpin.Flag("tls.key", "<key> Private key file").String()
-	metricsAddr = kingpin.Flag("metrics-addr", "Serve Prometheus metrics at this address").Default(":9369").String()
+	myFqdn       = kingpin.Flag("fqdn", "FQDN to register with").Default(fqdn.Get()).Envar("FQDN").String()
+	proxyURL     = kingpin.Flag("proxy-url", "Push proxy to talk to.").Required().String()
+	caCertFile   = kingpin.Flag("tls.cacert", "<file> CA certificate to verify peer against").String()
+	tlsCert      = kingpin.Flag("tls.cert", "<cert> Client certificate file").String()
+	tlsKey       = kingpin.Flag("tls.key", "<key> Private key file").String()
+	metricsAddr  = kingpin.Flag("metrics-addr", "Serve Prometheus metrics at this address").Default(":9369").String()
+	validNetwork = kingpin.Flag("valid-net", "").String()
 
 	retryInitialWait = kingpin.Flag("proxy.retry.initial-wait", "Amount of time to wait after proxy failure").Default("1s").Duration()
 	retryMaxWait     = kingpin.Flag("proxy.retry.max-wait", "Maximum amount of time to wait between proxy poll retries").Default("5s").Duration()
@@ -128,7 +129,25 @@ func (c *Coordinator) doScrape(request *http.Request, client *http.Client) {
 		request.URL.RawQuery = params.Encode()
 	}
 
-	if request.URL.Hostname() != *myFqdn {
+	level.Info(logger).Log("Got scrape request", "host", request.URL.Hostname())
+
+	if *validNetwork != "" {
+		_, network, err := net.ParseCIDR(*validNetwork)
+		if err != nil {
+			c.handleErr(request, client, err)
+			return
+		}
+
+		ip := net.ParseIP(request.URL.Hostname())
+		if ip != nil {
+			c.handleErr(request, client, errors.New("scrape target is not an ip"))
+			return
+		}
+		if !network.Contains(ip) {
+			c.handleErr(request, client, errors.New("scrape target is not in the network"))
+			return
+		}
+	} else if request.URL.Hostname() != *myFqdn {
 		c.handleErr(request, client, errors.New("scrape target doesn't match client fqdn"))
 		return
 	}

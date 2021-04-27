@@ -16,6 +16,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"sync"
 	"time"
@@ -113,12 +114,23 @@ func (c *Coordinator) DoScrape(ctx context.Context, r *http.Request) (*http.Resp
 	if err != nil {
 		return nil, err
 	}
-	level.Info(c.logger).Log("msg", "DoScrape", "scrape_id", id, "url", r.URL.String(), "hostname", r.URL.Hostname())
+
+	clientFqdn := ""
+	clientFqdnIdx := rand.Intn(len(c.known))
+	for k := range c.known {
+		if clientFqdnIdx == 0 {
+			clientFqdn = k
+			break
+		}
+		clientFqdnIdx--
+	}
+
+	level.Info(c.logger).Log("msg", "DoScrape", "scrape_id", id, "url", r.URL.String(), "hostname", r.URL.Hostname(), "client", clientFqdn)
 	r.Header.Add("Id", id)
 	select {
 	case <-ctx.Done():
 		return nil, fmt.Errorf("Timeout reached for %q: %s", r.URL.String(), ctx.Err())
-	case c.getRequestChannel(r.URL.Hostname()) <- r:
+	case c.getRequestChannel(clientFqdn) <- r:
 	}
 
 	respCh := c.getResponseChannel(id)
