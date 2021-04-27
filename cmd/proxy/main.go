@@ -208,7 +208,7 @@ func main() {
 	mux := http.NewServeMux()
 	handler := newHTTPHandler(logger, coordinator, mux)
 
-	level.Info(logger).Log("msg", "Listening", "address", *listenAddress)
+	level.Info(logger).Log("msg", "Listening adadasd", "address", *listenAddress)
 	if err := http.ListenAndServe(*listenAddress, handler); err != nil {
 		level.Error(logger).Log("msg", "Listening failed", "err", err)
 		os.Exit(1)
