@@ -25,9 +25,9 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/google/uuid"
+	"github.com/prometheus-community/pushprox/util"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/prometheus-community/pushprox/util"
 )
 
 var (
@@ -113,7 +113,7 @@ func (c *Coordinator) DoScrape(ctx context.Context, r *http.Request) (*http.Resp
 	if err != nil {
 		return nil, err
 	}
-	level.Info(c.logger).Log("msg", "DoScrape", "scrape_id", id, "url", r.URL.String())
+	level.Info(c.logger).Log("msg", "DoScrape", "scrape_id", id, "url", r.URL.String(), "hostname", r.URL.Hostname())
 	r.Header.Add("Id", id)
 	select {
 	case <-ctx.Done():
