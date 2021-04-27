@@ -143,6 +143,8 @@ func (h *httpHandler) handlePush(w http.ResponseWriter, r *http.Request) {
 
 // handlePoll handles clients registering and asking for scrapes.
 func (h *httpHandler) handlePoll(w http.ResponseWriter, r *http.Request) {
+	level.Info(h.logger).Log("msg", "Request to /poll")
+
 	fqdn, _ := ioutil.ReadAll(r.Body)
 	request, err := h.coordinator.WaitForScrapeInstruction(strings.TrimSpace(string(fqdn)))
 	if err != nil {

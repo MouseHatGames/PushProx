@@ -198,7 +198,7 @@ func (c *Coordinator) doPoll(client *http.Client) error {
 	level.Info(c.logger).Log("msg", "Poll URL", "url", u)
 
 	url := base.ResolveReference(u)
-	level.Info(c.logger).Log("msg", "Full URL", "url", base)
+	level.Info(c.logger).Log("msg", "Full URL", "url", url)
 
 	resp, err := client.Post(url.String(), "", strings.NewReader(*myFqdn))
 	if err != nil {
