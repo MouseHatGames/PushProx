@@ -129,7 +129,7 @@ func (c *Coordinator) doScrape(request *http.Request, client *http.Client) {
 		request.URL.RawQuery = params.Encode()
 	}
 
-	level.Info(logger).Log("Got scrape request", "host", request.URL.Hostname())
+	level.Info(logger).Log("msg", "Got scrape request", "host", request.URL.Hostname())
 
 	if *validNetwork != "" {
 		_, network, err := net.ParseCIDR(*validNetwork)
@@ -139,7 +139,7 @@ func (c *Coordinator) doScrape(request *http.Request, client *http.Client) {
 		}
 
 		ip := net.ParseIP(request.URL.Hostname())
-		if ip != nil {
+		if ip == nil {
 			c.handleErr(request, client, errors.New("scrape target is not an ip"))
 			return
 		}
