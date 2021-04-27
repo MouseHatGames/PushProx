@@ -181,23 +181,33 @@ func (c *Coordinator) doPush(resp *http.Response, origRequest *http.Request, cli
 }
 
 func (c *Coordinator) doPoll(client *http.Client) error {
+	level.Info(c.logger).Log("msg", "Starting poll")
+
 	base, err := url.Parse(*proxyURL)
 	if err != nil {
 		level.Error(c.logger).Log("msg", "Error parsing url:", "err", err)
 		return errors.Wrap(err, "error parsing url")
 	}
+	level.Info(c.logger).Log("msg", "Base URL", "url", base)
+
 	u, err := url.Parse("poll")
 	if err != nil {
 		level.Error(c.logger).Log("msg", "Error parsing url:", "err", err)
 		return errors.Wrap(err, "error parsing url poll")
 	}
+	level.Info(c.logger).Log("msg", "Poll URL", "url", u)
+
 	url := base.ResolveReference(u)
+	level.Info(c.logger).Log("msg", "Full URL", "url", base)
+
 	resp, err := client.Post(url.String(), "", strings.NewReader(*myFqdn))
 	if err != nil {
 		level.Error(c.logger).Log("msg", "Error polling:", "err", err)
 		return errors.Wrap(err, "error polling")
 	}
 	defer resp.Body.Close()
+
+	level.Info(c.logger).Log("msg", "Received response")
 
 	request, err := http.ReadRequest(bufio.NewReader(resp.Body))
 	if err != nil {
